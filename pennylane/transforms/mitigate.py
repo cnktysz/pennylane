@@ -292,6 +292,36 @@ def poly_extrapolate(x, y, order):
     coeff = _polyfit(x, y, order)
     return coeff[-1]
 
+def exp_extrapolate(x, y, asymptote=0):
+    r"""Extrapolator to :math:`f(0)` for exponential fit.
+
+    The exponential is defined as ``f(x) = asymptote+p[0] * exp(p[1]*x)``.
+    This function is compatible with all interfaces supported by pennylane.
+
+    Args:
+        x (Array): Data in x
+        y (Array): Data in y = f(x)
+        asymptote (float): -inf or +inf asymptote of the exponential
+
+    Returns:
+        float: Extrapolated value at f(0).
+
+    .. seealso:: :func:`~.pennylane.transforms.poly_extrapolate`, :func:`~.pennylane.transforms.mitigate_with_zne`
+
+    **Example:**
+
+    >>> x = np.linspace(1, 10, 5)
+    >>> y = 1.7*np.exp(2.1*x) + 0.3 * np.random.rand(len(x))
+    >>> qml.transforms.exp_extrapolate(x, y)
+    tensor(1.7200644, requires_grad=True)
+    >>> y = 0.3 + 1.2*np.exp(-0.8*x)
+    >>> qml.transforms.exp_extrapolate(x, y, asymptote=0.3)
+    tensor(1.5, requires_grad=True)
+
+    """
+    logy = qml.math.log(y-asymptote)
+    coeff = _polyfit(x, logy, 1)
+    return asymptote+qml.math.exp(coeff[-1])
 
 def richardson_extrapolate(x, y):
     r"""Polynomial fit where the degree of the polynomial is fixed to being equal to the length of ``x``.
